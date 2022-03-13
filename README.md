@@ -1,12 +1,14 @@
 # unsup_action_seg_st_pe_embed
 
-Python implementation of the paper "Unsupervised Method for Video Action Segmentation Through Spatio-Temporal and Positional-Encoded Embeddings"
+Python implementation of the paper "Unsupervised Method for Video Action Segmentation Through Spatio-Temporal and Positional-Encoded Embeddings".
 
 ## Usage
 
 Install [conda](https://docs.conda.io/en/latest/miniconda.html)
 
 Install [video_features](https://github.com/v-iashin/video_features) to extract I3D features
+
+Install [decord](https://github.com/dmlc/decord.git) for efficient video reading
 
 Download the Breakfast [dataset](https://drive.google.com/open?id=1jgSoof1AatiDRpGY091qd4TEKF-BUt6I) and the ground truth segmentations [files](https://drive.google.com/open?id=1R3z_CkO1uIOhu4y2Nh0pCHjQQ2l-Ab9E)
 
