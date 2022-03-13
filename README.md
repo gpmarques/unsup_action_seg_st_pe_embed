@@ -17,7 +17,7 @@ Install [video_features](https://github.com/v-iashin/video_features)
 
 Install [decord](https://github.com/dmlc/decord.git) for efficient video reading
 
-##### Quickstart
+##### Using Conda, run:
 ```
 conda env create -f environment.yml
 conda activate as_env
@@ -25,6 +25,11 @@ jupyter-lab
 ``` 
 ## Run Experiment
 
-Execute 
+First, execute the extract_features.ipynb file to extract video features using I3D and Slowfast; 
 
-to extract I3D features
+Run evaluation\_inria.ipynb file to execute the experiment on the INRIA dataset;
+
+Run evaluation\_breakfast.ipynb file to execute the experiment on the Breakfast dataset.
+
+
+
