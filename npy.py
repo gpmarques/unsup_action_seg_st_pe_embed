@@ -31,7 +31,7 @@ class Npy(object):
         Method that counts the number of npy files in a dir
     """
 
-    def read(self, path: str) -> np.ndarray:
+    def read(self, path: str, iterator: bool = False) -> np.ndarray:
         """ Method to read all npy files in the path passed. It expects npy fi-
         -les to be in the following format XXXX_<name>.npy, where XXXX is a
         number ordering the files
@@ -59,11 +59,17 @@ class Npy(object):
 
         # sorting the files by the index prefix in each file name
         npy_fnames = sorted(npy_fnames, key=lambda p: int(p.split("_")[0]))
+        
+#         if iterator is False:
         features = [np.load(os.path.join(path, fname))
                     for fname in npy_fnames]
         features = np.array(features)
         return features.reshape((features.shape[0] * features.shape[1],
-                                 features.shape[2]))
+                                     features.shape[2]))
+#         for i in range(len(npy_fnames)):
+#             feature = np.load(os.path.join(path, fname))
+#             yield feature
+                              
 
     def write(self, path: str, npy_fname: str, npy: np.ndarray) -> None:
         """ Method to write a npy file in the path passed

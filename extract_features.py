@@ -2,7 +2,7 @@ import subprocess
 import os
 import runpy
 
-root = '../BreakfastII_15fps_qvga_sync'
+root = './BreakfastII_15fps_qvga_sync'
 video_paths = './video_paths.txt'
 SEGMENT_SIZE = 128
 

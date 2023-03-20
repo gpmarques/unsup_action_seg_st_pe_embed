@@ -82,7 +82,7 @@ class Features:
         features_count = self.npy_io.count_npy_files(self.path)
         return features_count > 0
 
-    def __call__(self, with_pe: bool = False, reduce_dim: bool = False) -> np.ndarray:
+    def __call__(self, with_pe: bool = False, reduce_dim: bool = False, **kwargs) -> np.ndarray:
         """ Reads this features with the npy_io object in path """
         features = self.npy_io.read(self.path)
         
@@ -90,7 +90,10 @@ class Features:
             features = PCA(n_components=.999999).fit_transform(features)
             
         if with_pe:
-            return self._positional_encoding(features)
+            features = self._positional_encoding(features)
+        
+        if kwargs.get("avg"):
+            features = self._avg(features, kwargs.get("n_rows"))
         
         return features
 
@@ -153,3 +156,17 @@ class Features:
         pe = get_sinusoid_encoding_table(length, d_model)
 
         return data + pe
+
+    def _avg(self, features, N=2):
+        cum = np.cumsum(features, 0)
+        result = cum[N-1::N] / float(N)
+        result[1:] = result[1:] - result[:-1]
+
+        remainder = features.shape[0] % N
+        if remainder != 0:
+            if remainder < features.shape[0]:
+                lastAvg = (cum[-1]-cum[-1-remainder]) / float(remainder)
+            else:
+                lastAvg = cum[-1] / float(remainder)
+            result = np.vstack([result, lastAvg])
+        return result

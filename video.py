@@ -81,7 +81,7 @@ class Video(object):
         """ Returns the number of frames of this video """
         return len(self.reader)
 
-    def __call__(self, frame_id_list: list) -> np.ndarray:
+    def __call__(self, frame_id_list: list, **kwargs) -> np.ndarray:
         """ Returns the frames based on the indexes passed in the frame_id_list
 
         Parameters
@@ -95,4 +95,7 @@ class Video(object):
             Returns a numpy array containing the frames from the index of this
             method parameter
         """
-        return self.reader.get_batch(frame_id_list).asnumpy()
+        if kwargs.get("as_tensor"):
+            decord.bridge.set_bridge('torch')
+                
+        return self.reader.get_batch(frame_id_list)

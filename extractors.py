@@ -28,6 +28,8 @@ import math
 from enum import Enum
 
 from video import Video
+from dino import Dino
+import torch
 
 
 class ExtractionStrategy(ABC):
@@ -107,7 +109,7 @@ class ExtractionStrategy(ABC):
         clips_input = np.stack(clips_input, axis=0)
         clips_input = clips_input.reshape((-1,) + (input_len, 3, self.FRAME_SIDE_SIZE, self.FRAME_SIDE_SIZE))
         clips_input = np.transpose(clips_input, (0, 2, 1, 3, 4))
-        return clips_input
+        return nd.array(clips_input, gpu())
 
     def extract(self, video: Video) -> None:
         """
@@ -124,10 +126,10 @@ class ExtractionStrategy(ABC):
         frames_id_list = self._sample_frames(len(video))
 
         for i, ith_frames_id_list in enumerate(frames_id_list):
-            frames = self._preprocess(video(ith_frames_id_list),
+            frames = self._preprocess(video(ith_frames_id_list).asnumpy(),
                                       input_len=self.input_len)
 
-            features = self.model(nd.array(frames, gpu())).asnumpy()
+            features = self.model(frames).asnumpy()
 
             video.features.write(i, features)
 
@@ -280,6 +282,33 @@ class I3DStrategy(ExtractionStrategy):
 
         return frames_id_list
 
+class DinoStrategy(ExtractionStrategy):
+    
+    def __init__(self, BATCH_SIZE=50):
+        self.model = Dino()
+        self.BATCH_SIZE = BATCH_SIZE
+    
+    def _sample_frames(self, video_len: int) -> list:
+        n_batches = math.floor(video_len / self.BATCH_SIZE)
+        frames_id_list = [list(range((i-1)*self.BATCH_SIZE, i*self.BATCH_SIZE, 1))
+                          for i in range(1, n_batches + 1)]
+
+        if video_len % self.BATCH_SIZE > 0:  # make sure that all frames are used
+            rest_frame_id_list = list(range(video_len - self.BATCH_SIZE, video_len, 1))
+            frames_id_list.append(rest_frame_id_list)
+
+        return frames_id_list
+    
+    def _preprocess(self, frames: torch.Tensor, input_len: int) -> np.ndarray:
+        return frames.to(torch.float32).permute(0, 3, 2, 1)
+    
+    def extract(self, video: Video) -> None:
+        frames_id_list = self._sample_frames(len(video))
+        
+        for i, ith_frames_id_list in enumerate(frames_id_list):
+            frames = video(ith_frames_id_list, as_tensor=True)
+            features = self.model(self._preprocess(frames, None))
+            video.features.write(i, features.cpu().detach().numpy())
 
 class ExtractorFactory(Enum):
     """
@@ -304,6 +333,7 @@ class ExtractorFactory(Enum):
     """
     SLOWFAST = "Slowfast"
     I3D = "I3D"
+    DINO = "DINO"
 
     @staticmethod
     def values_list() -> list:
@@ -328,4 +358,5 @@ class ExtractorFactory(Enum):
         return {
             ExtractorFactory.SLOWFAST.value: SlowFastStrategy,
             ExtractorFactory.I3D.value: I3DStrategy,
+            ExtractorFactory.DINO.value: DinoStrategy,
         }[extraction_type]
